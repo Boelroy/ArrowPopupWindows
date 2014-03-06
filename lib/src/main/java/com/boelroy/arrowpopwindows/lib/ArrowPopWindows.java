@@ -114,7 +114,7 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
             switch(direct){
                 case SHOW_TOP:
                     yPos = anchorRect.top - mMeasuredHeight;
-                    reMeasuredHeight = mMeasuredHeight < anchorRect.top ? mMeasuredHeight : anchorRect.top - arrowHeight;
+                    reMeasuredHeight = mMeasuredHeight < anchorRect.top ? mMeasuredHeight : anchorRect.top - 2 * arrowHeight;
                     showView = mArrowDown;
                     hideView = mArrowUp;
                     break;
@@ -127,12 +127,12 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
                 case SHOW_VERTICAL_AUTO:
                     if(anchorRect.top > mVisibleHeight - anchorRect.bottom){
                         yPos = anchorRect.top - mMeasuredHeight;
-                        reMeasuredHeight = mMeasuredHeight < anchorRect.top ? mMeasuredHeight : anchorRect.top - arrowHeight;
+                        reMeasuredHeight = mMeasuredHeight < anchorRect.top ? mMeasuredHeight : anchorRect.top - 2 * arrowHeight;
                         showView = mArrowDown;
                         hideView = mArrowUp;
                     }else{
                         yPos = anchorRect.bottom;
-                        reMeasuredHeight = mMeasuredHeight < (mVisibleHeight - anchorRect.bottom)?mMeasuredHeight:mVisibleHeight - anchorRect.top;
+                        reMeasuredHeight = mMeasuredHeight < (mVisibleHeight - anchorRect.bottom)?mMeasuredHeight:mVisibleHeight - 2 * anchorRect.top;
                         showView = mArrowUp;
                         hideView = mArrowDown;
                     }
@@ -164,15 +164,7 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
         if(direct == SHOW_BLOW || direct == SHOW_TOP || direct == SHOW_VERTICAL_AUTO){
             mArrowLeft.setVisibility(View.GONE);
             mArrowRight.setVisibility(View.GONE);
-            if(direct == SHOW_TOP){
-                mArrowUp.setVisibility(View.GONE);
-                mArrowDown.setVisibility(View.VISIBLE);
-                return mArrowDown;
-            }else{
-                mArrowDown.setVisibility(View.GONE);
-                mArrowUp.setVisibility(View.VISIBLE);
-                return mArrowUp;
-            }
+            return mArrowUp;
         }else{
             mArrowDown.setVisibility(View.GONE);
             mArrowUp.setVisibility(View.GONE);
@@ -189,6 +181,7 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
 
     private void showArrow(View showArrow, View hideView, int requestedX){
         showArrow.setVisibility(View.VISIBLE);
+        hideView.setVisibility(View.INVISIBLE);
         ViewGroup.MarginLayoutParams param = (ViewGroup.MarginLayoutParams)showArrow.getLayoutParams();
         param.leftMargin = requestedX;
     }
