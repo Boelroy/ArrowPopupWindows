@@ -244,6 +244,7 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
 
         return arrowPos;
     }
+
     private void showArrow(View showArrow, View hideView, int requestedX, int direct){
         showArrow.setVisibility(View.VISIBLE);
         hideView.setVisibility(View.INVISIBLE);
@@ -262,7 +263,12 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
             case SHOW_TOP:
                 mWindow.setAnimationStyle(R.style.Animations_PopUpMenu_Center);
                 break;
-            case SHOW_VERTICAL_AUTO:
+            case SHOW_LEFT:
+                mWindow.setAnimationStyle(R.style.Animations_PopUpRightMenu_Center);
+                break;
+            case SHOW_RIGHT:
+                mWindow.setAnimationStyle(R.style.Animations_PopUpLeftMenu_Center);
+                break;
 
         }
     }

@@ -20,4 +20,16 @@
         <item name="android:windowExitAnimation">@anim/shrink_from_bottom</item>
     </style>
 
+    <style name="Animations.PopUpRightMenu"/>
+    <style name="Animations.PopUpRightMenu.Center">
+        <item name="android:windowEnterAnimation">@anim/grow_from_right</item>
+        <item name="android:windowExitAnimation">@anim/shrink_from_right</item>
+    </style>
+
+    <style name="Animations.PopUpLeftMenu"/>
+    <style name="Animations.PopUpLeftMenu.Center">
+        <item name="android:windowEnterAnimation">@anim/grow_from_left</item>
+        <item name="android:windowExitAnimation">@anim/shrink_from_left</item>
+    </style>
+
 </resources>
