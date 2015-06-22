@@ -3,6 +3,7 @@ package com.boelroy.arrowpopwindows.lib;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,7 +56,7 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
     }
 
     private void setRootViewId(int id){
-        mRootView = (ViewGroup) View.inflate(mContext, id, null);
+        mRootView = View.inflate(mContext, id, null);
         mBody = (ViewGroup) mRootView.findViewById(R.id.arrow_body);
 
         mArrowUp = (ImageView) mRootView.findViewById(R.id.arrow_up);
@@ -86,31 +87,33 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
         if(direct > SHOW_HORIZON_AUTO || direct < SHOW_LEFT){
             direct = SHOW_VERTICAL_AUTO;
         }
+
+        //get arrow to show
         View view = hideOtherArrowByDirect(direct);
 
         preShow();
 
-        int[] location = new int[2];
-        anchor.getLocationOnScreen(location);
-        Rect anchorRect = new Rect(location[0], location[1], location[0]+anchor.getWidth(), location[1]+anchor.getHeight());
-        mRootView.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        Rect anchorRect = getAnchorRectOnScreen(anchor);
 
-        if(!mMeasured){
-            mMeasuredWidth = mRootView.getMeasuredWidth();
-            mMeasuredHeight= mRootView.getMeasuredHeight();
-            mMeasured = true;
-        }
+        measureRootView();
 
+        //it must be call after measureRootView
         final int arrowHeight = view.getMeasuredHeight();
         final int arrowWidth = view.getMeasuredWidth();
 
         int xPos = 0, yPos = 0, reMeasuredWidth = 0, reMeasuredHeight = 0, bodyWidth = 0, bodyHeight = 0;
-        View showView = null;
-        View hideView = null;
+        View showView = null, hideView = null;
         if(direct == SHOW_BLOW || direct == SHOW_TOP || direct == SHOW_VERTICAL_AUTO){
             xPos = anchorRect.centerX() - mMeasuredWidth / 2;
             reMeasuredWidth = mMeasuredWidth;
             bodyWidth = RelativeLayout.LayoutParams.WRAP_CONTENT;
+            if(direct == SHOW_VERTICAL_AUTO){
+                if(anchorRect.top > mVisibleHeight - anchorRect.bottom)
+                    direct = SHOW_TOP;
+                else
+                    direct = SHOW_BLOW;
+            }
+
             switch(direct){
                 case SHOW_TOP:
                     yPos = anchorRect.top - mMeasuredHeight;
@@ -124,39 +127,50 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
                     showView = mArrowUp;
                     hideView = mArrowDown;
                     break;
-                case SHOW_VERTICAL_AUTO:
-                    if(anchorRect.top > mVisibleHeight - anchorRect.bottom){
-                        yPos = anchorRect.top - mMeasuredHeight;
-                        reMeasuredHeight = mMeasuredHeight < anchorRect.top ? mMeasuredHeight : anchorRect.top - 2 * arrowHeight;
-                        showView = mArrowDown;
-                        hideView = mArrowUp;
-                    }else{
-                        yPos = anchorRect.bottom;
-                        reMeasuredHeight = mMeasuredHeight < (mVisibleHeight - anchorRect.bottom)?mMeasuredHeight:mVisibleHeight - 2 * anchorRect.top;
-                        showView = mArrowUp;
-                        hideView = mArrowDown;
-                    }
             }
-            bodyHeight = reMeasuredHeight - arrowHeight;
-        }else{
 
+            bodyHeight = reMeasuredHeight - 2 * arrowHeight;
+        }else{
+            yPos = anchorRect.centerY() - mMeasuredHeight / 2;
+            reMeasuredHeight = mMeasuredHeight;
+            bodyHeight = RelativeLayout.LayoutParams.WRAP_CONTENT;
+            if (direct == SHOW_HORIZON_AUTO) {
+                if (anchorRect.left > mVisibleWidth - anchorRect.right)
+                    direct = SHOW_LEFT;
+                else
+                    direct = SHOW_RIGHT;
+            }
+
+            switch (direct) {
+                case SHOW_LEFT:
+                    xPos = anchorRect.left - mMeasuredWidth;
+                    reMeasuredWidth = mMeasuredWidth < anchorRect.top ? mMeasuredWidth : anchorRect.left - 2 * arrowWidth;
+                    showView = mArrowRight;
+                    hideView = mArrowLeft;
+                    break;
+                case SHOW_RIGHT:
+                    xPos = anchorRect.right;
+                    reMeasuredWidth = mMeasuredWidth < (mVisibleWidth - anchorRect.right) ? mMeasuredWidth: mVisibleWidth - anchorRect.left;
+                    showView = mArrowLeft;
+                    hideView = mArrowRight;
+                    break;
+            }
+            bodyWidth = reMeasuredWidth - 2 * arrowWidth;
         }
 
         preShow(reMeasuredWidth, reMeasuredHeight);
-        mBody.setLayoutParams(new RelativeLayout.LayoutParams(bodyWidth, bodyHeight));
 
-        int arrowPos;
-        if(mMeasuredWidth / 2 > anchorRect.centerX()){
-            arrowPos  = anchorRect.centerX() - arrowWidth / 2;
-        }else if(mMeasuredWidth / 2 > mVisibleWidth - anchorRect.centerX()){
-            arrowPos  = mMeasuredWidth - (mVisibleWidth - anchorRect.centerX()) - arrowWidth / 2;
-        }
-        else{
-            arrowPos  = (mMeasuredWidth - arrowWidth) / 2;
-        }
+        //set body height and width
+        RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams)mBody.getLayoutParams();
+        lp.height = bodyHeight;
+        lp.width = bodyWidth;
+        mBody.setLayoutParams(lp);
 
-        showArrow(showView, hideView, arrowPos);
+        //set the arrow position
+        int arrowPos = getArrowOffset(anchorRect, arrowWidth, arrowHeight, direct);
+        showArrow(showView, hideView, arrowPos, direct);
         setAnimationStyle(mVisibleWidth, anchorRect.centerX(), direct);
+
         mWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPos, yPos);
     }
 
@@ -171,19 +185,73 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
             if(direct == SHOW_LEFT){
                 mArrowLeft.setVisibility(View.GONE);
                 mArrowRight.setVisibility(View.VISIBLE);
+                return mArrowRight;
             }else{
                 mArrowRight.setVisibility(View.GONE);
                 mArrowLeft.setVisibility(View.VISIBLE);
+                return mArrowLeft;
             }
         }
-        return null;
     }
 
-    private void showArrow(View showArrow, View hideView, int requestedX){
+    /**
+     * get the view's left and top on the screen.
+     * @param anchor the view we want to get the position
+     * @return  Rect that contains the left, top of the view
+     */
+    private Rect getAnchorRectOnScreen(View anchor){
+        int[] location = new int[2];
+        anchor.getLocationOnScreen(location);
+        Rect anchorRect = new Rect(location[0], location[1],
+                location[0]+anchor.getWidth(), location[1]+anchor.getHeight());
+        return anchorRect;
+    }
+
+    /**
+     *
+     */
+    private void measureRootView(){
+        mRootView.measure(ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        if(!mMeasured){
+            mMeasuredWidth = mRootView.getMeasuredWidth();
+            mMeasuredHeight= mRootView.getMeasuredHeight();
+            mMeasured = true;
+        }
+
+    }
+
+    private int getArrowOffset(Rect anchorRect, int arrowWidth, int arrowHeihgt, int direct){
+        int arrowPos, mMeasuredPos, anchorCenter, arrow;
+        if(direct == SHOW_TOP || direct == SHOW_BLOW){
+            mMeasuredPos = mMeasuredWidth;
+            anchorCenter = anchorRect.centerX();
+            arrow = arrowWidth;
+        } else {
+            mMeasuredPos = mMeasuredHeight;
+            anchorCenter = anchorRect.centerY();
+            arrow = arrowHeihgt;
+        }
+        if(mMeasuredPos / 2 > anchorCenter){
+            arrowPos  = anchorCenter - arrow / 2;
+        }else if(mMeasuredPos / 2 > mVisibleWidth - anchorCenter){
+            arrowPos  = mMeasuredPos - (mVisibleWidth - anchorCenter) - arrow / 2;
+        }
+        else{
+            arrowPos  = (mMeasuredPos - arrow) / 2;
+        }
+
+        return arrowPos;
+    }
+    private void showArrow(View showArrow, View hideView, int requestedX, int direct){
         showArrow.setVisibility(View.VISIBLE);
         hideView.setVisibility(View.INVISIBLE);
         ViewGroup.MarginLayoutParams param = (ViewGroup.MarginLayoutParams)showArrow.getLayoutParams();
-        param.leftMargin = requestedX;
+        if(direct == SHOW_TOP || direct == SHOW_BLOW)
+            param.leftMargin = requestedX;
+        else
+            param.topMargin = requestedX;
     }
 
     private void setAnimationStyle(int screenWidth, int requestedX, int direct){

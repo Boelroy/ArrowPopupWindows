@@ -26,7 +26,7 @@ public class MainActivity extends ActionBarActivity {
 
                     }
                 });
-                arrowPopWindows.show(view, ArrowPopWindows.SHOW_BLOW);
+                arrowPopWindows.show(view, ArrowPopWindows.SHOW_TOP);
             }
         });
     }
