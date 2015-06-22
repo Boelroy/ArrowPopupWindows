@@ -269,7 +269,6 @@ public class ArrowPopWindows extends PopupWindows implements OnDismissListener{
             case SHOW_RIGHT:
                 mWindow.setAnimationStyle(R.style.Animations_PopUpLeftMenu_Center);
                 break;
-
         }
     }
 
