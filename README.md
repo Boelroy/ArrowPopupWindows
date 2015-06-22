@@ -41,4 +41,4 @@ arrowPopWindows.show(view, SHOW_TOP)
 
 # Demo pic
 
-<img src="https://github.com/Boelroy/ArrowPopupWindows/tree/master/screen/screen.png" width="300">
+<img src="https://raw.githubusercontent.com/Boelroy/ArrowPopupWindows/master/screen/screen.png" width="300">
